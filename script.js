@@ -1,69 +1,71 @@
 const fetchButton = document.getElementById("fetchData");
 const cityInput = document.getElementById("city");
 
-// Chart instances
-let tempChart, aqiChart;
+let tempTrendChart, aqiChart;
 
-// Fetch environmental data from OpenWeatherMap
 fetchButton.addEventListener("click", async () => {
-    const city = cityInput.value;
-    if (!city) {
-        alert("Please enter a city.");
-        return;
-    }
-
-    // OpenWeatherMap API
-    const apiKey = "YOUR_API_KEY_HERE"; // Get free key from https://openweathermap.org/api
-    const weatherUrl = `https://api.openweathermap.org/data/2.5/weather?q=${city}&units=metric&appid=${apiKey}`;
+    const city = cityInput.value.trim();
+    if (!city) return alert("Please enter a city.");
 
     try {
-        const response = await fetch(weatherUrl);
-        const data = await response.json();
+        // 1️⃣ Fetch current weather + 7-day forecast
+        const weatherApiKey = "YOUR_OPENWEATHERMAP_KEY";
+        const geoUrl = `https://api.openweathermap.org/geo/1.0/direct?q=${city}&limit=1&appid=${weatherApiKey}`;
+        const geoResp = await fetch(geoUrl);
+        const geoData = await geoResp.json();
+        if (!geoData[0]) return alert("City not found!");
 
-        if (data.cod !== 200) {
-            alert("City not found!");
-            return;
-        }
+        const { lat, lon } = geoData[0];
+        const forecastUrl = `https://api.openweathermap.org/data/2.5/onecall?lat=${lat}&lon=${lon}&exclude=minutely,hourly,alerts&units=metric&appid=${weatherApiKey}`;
+        const forecastResp = await fetch(forecastUrl);
+        const forecastData = await forecastResp.json();
 
-        const temperature = data.main.temp;
-        const humidity = data.main.humidity;
-        const aqi = Math.floor(Math.random() * 200); // Placeholder AQI, can integrate real AQI API later
+        const tempData = forecastData.daily.slice(0, 7).map(d => d.temp.day);
+        const days = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+        const dayLabels = forecastData.daily.slice(0,7).map(d => {
+            const date = new Date(d.dt * 1000);
+            return days[date.getDay()];
+        });
 
-        updateCharts(city, temperature, humidity, aqi);
-    } catch (error) {
-        console.error(error);
+        // 2️⃣ Fetch AQI data
+        const aqiToken = "YOUR_WAQI_API_TOKEN";
+        const aqiUrl = `https://api.waqi.info/feed/geo:${lat};${lon}/?token=${aqiToken}`;
+        const aqiResp = await fetch(aqiUrl);
+        const aqiData = await aqiResp.json();
+        const aqi = aqiData.status === "ok" ? aqiData.data.aqi : 0;
+
+        updateCharts(city, dayLabels, tempData, aqi);
+
+    } catch (err) {
+        console.error(err);
         alert("Error fetching data.");
     }
 });
 
-function updateCharts(city, temp, humidity, aqi) {
-    const tempCtx = document.getElementById("temperatureChart").getContext("2d");
+function updateCharts(city, days, temps, aqi) {
+    const tempCtx = document.getElementById("tempTrendChart").getContext("2d");
     const aqiCtx = document.getElementById("aqiChart").getContext("2d");
 
-    // Temperature Chart
-    if (tempChart) tempChart.destroy();
-    tempChart = new Chart(tempCtx, {
-        type: "bar",
+    if (tempTrendChart) tempTrendChart.destroy();
+    tempTrendChart = new Chart(tempCtx, {
+        type: "line",
         data: {
-            labels: ["Temperature (°C)", "Humidity (%)"],
+            labels: days,
             datasets: [{
-                label: city,
-                data: [temp, humidity],
-                backgroundColor: ["#14b8a6", "#fbbf24"]
+                label: `7-Day Temp (°C) in ${city}`,
+                data: temps,
+                borderColor: "#14b8a6",
+                backgroundColor: "rgba(20,184,166,0.2)",
+                fill: true,
+                tension: 0.3
             }]
         },
         options: {
             responsive: true,
-            plugins: {
-                title: {
-                    display: true,
-                    text: "Weather Data"
-                }
-            }
+            plugins: { title: { display: true, text: "7-Day Temperature Forecast" } }
         }
     });
 
-    // AQI Chart
     if (aqiChart) aqiChart.destroy();
     aqiChart = new Chart(aqiCtx, {
         type: "doughnut",
@@ -76,12 +78,7 @@ function updateCharts(city, temp, humidity, aqi) {
         },
         options: {
             responsive: true,
-            plugins: {
-                title: {
-                    display: true,
-                    text: "Air Quality Index (AQI)"
-                }
-            }
+            plugins: { title: { display: true, text: `Air Quality Index (AQI) in ${city}` } }
         }
     });
 }
