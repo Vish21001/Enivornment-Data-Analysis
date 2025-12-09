@@ -1,34 +1,34 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Environmental Data Dashboard</title>
-    <link rel="stylesheet" href="style.css">
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>🌿 Environmental Dashboard</title>
+<link rel="stylesheet" href="style.css">
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 <body>
-    <header>
-        <h1>🌿 Environmental Data Dashboard</h1>
-    </header>
+<header>
+    <h1>🌿 Environmental Data Dashboard</h1>
+</header>
 
-    <main>
-        <section class="input-section">
-            <label for="city">Enter City:</label>
-            <input type="text" id="city" placeholder="e.g., New York">
-            <button id="fetchData">Get Data</button>
-        </section>
+<main>
+    <section class="input-section">
+        <label for="city">Enter City:</label>
+        <input type="text" id="city" placeholder="e.g., New York">
+        <button id="fetchData">Get Data</button>
+    </section>
 
-        <section class="chart-section">
-            <canvas id="temperatureChart"></canvas>
-            <canvas id="aqiChart"></canvas>
-        </section>
-    </main>
+    <section class="charts">
+        <canvas id="tempTrendChart"></canvas>
+        <canvas id="aqiChart"></canvas>
+    </section>
+</main>
 
-    <footer>
-        <p>Vish 21001 | Environmental Dashboard Project</p>
-    </footer>
+<footer>
+    <p>Vish 21001 | Environmental Dashboard Project</p>
+</footer>
 
-    <script src="script.js"></script>
+<script src="script.js"></script>
 </body>
 </html>
